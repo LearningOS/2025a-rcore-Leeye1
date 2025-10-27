@@ -1,4 +1,5 @@
 //! Process management syscalls
+
 use crate::{
     task::{exit_current_and_run_next, suspend_current_and_run_next},
     timer::get_time_us,
@@ -39,7 +40,20 @@ pub fn sys_get_time(ts: *mut TimeVal, _tz: usize) -> isize {
 }
 
 // TODO: implement the syscall
-pub fn sys_trace(_trace_request: usize, _id: usize, _data: usize) -> isize {
-    trace!("kernel: sys_trace");
-    -1
+pub fn sys_trace(trace_request: usize, id: usize, data: usize) -> isize {
+    match trace_request {
+        0 => {
+            unsafe{
+                (id as *const u8).read_volatile() as isize
+            }
+        },//loader::get_num_app()这里参照了这个函数里面读取的方法
+        1 => {
+            unsafe{
+                (id as *mut u8).write_volatile(data as u8);
+                0
+            }
+        },//loader:load_app()里面有一个write_volatile()的用法
+        2 => {0},
+        _ => -1,
+    }
 }

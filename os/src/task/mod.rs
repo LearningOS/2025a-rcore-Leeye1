@@ -22,7 +22,6 @@ use switch::__switch;
 pub use task::{TaskControlBlock, TaskStatus};
 
 pub use context::TaskContext;
-
 /// The task manager, where all the tasks are managed.
 ///
 /// Functions implemented on `TaskManager` deals with all task state transitions
@@ -135,8 +134,19 @@ impl TaskManager {
             panic!("All applications completed!");
         }
     }
+    
+    fn add_current_count(&self,_id:usize){
+        //get the current task number
+        
+        //go to the current task's TCB and add syscall counts
+
+    }
 }
 
+/// Add the current task's syscall count
+pub fn add_current_count(_id:usize){
+    TASK_MANAGER.add_current_count(_id);
+}
 /// Run the first task in task list.
 pub fn run_first_task() {
     TASK_MANAGER.run_first_task();
