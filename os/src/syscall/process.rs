@@ -1,7 +1,7 @@
 //! Process management syscalls
 
 use crate::{
-    task::{exit_current_and_run_next, suspend_current_and_run_next},
+    task::{exit_current_and_run_next, suspend_current_and_run_next, read_current_count},
     timer::get_time_us,
 };
 
@@ -53,7 +53,7 @@ pub fn sys_trace(trace_request: usize, id: usize, data: usize) -> isize {
                 0
             }
         },//loader:load_app()里面有一个write_volatile()的用法
-        2 => {0},
+        2 => { read_current_count(id)as isize },
         _ => -1,
     }
 }

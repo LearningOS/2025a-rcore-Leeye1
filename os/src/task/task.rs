@@ -9,6 +9,7 @@ pub struct TaskControlBlock {
     pub task_status: TaskStatus,
     /// The task context
     pub task_cx: TaskContext,
+    pub task_syscall_count: TaskSyscallCount,
 }
 
 /// The status of a task
@@ -23,3 +24,14 @@ pub enum TaskStatus {
     /// exited
     Exited,
 }
+
+#[derive(Copy, Clone)]
+pub enum TaskSyscallCount {
+    SyscallWrite(usize),
+    SyscallExit(usize),
+    SycallYield(usize),
+    SyscallGetTime(usize),
+    SyscallTrace(usize),
+}
+
+
