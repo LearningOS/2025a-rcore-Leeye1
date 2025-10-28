@@ -19,7 +19,8 @@ use crate::loader::{get_num_app, init_app_cx};
 use crate::sync::UPSafeCell;
 use lazy_static::*;
 use switch::__switch;
-pub use task::{TaskControlBlock, TaskStatus, TaskSyscallCount};
+pub use task::{TaskControlBlock, TaskStatus};
+use task::MAX_SYSCALL_ID;
 
 pub use context::TaskContext;
 /// The task manager, where all the tasks are managed.
@@ -53,7 +54,7 @@ lazy_static! {
         let mut tasks = [TaskControlBlock {
             task_cx: TaskContext::zero_init(),
             task_status: TaskStatus::UnInit,
-            task_syscall_count: TaskSyscallCount::SycallYield(())
+            task_syscall_count:[0;MAX_SYSCALL_ID],
         }; MAX_APP_NUM];
         for (i, task) in tasks.iter_mut().enumerate() {
             task.task_cx = TaskContext::goto_restore(init_app_cx(i));
@@ -137,17 +138,17 @@ impl TaskManager {
     }
     
     fn add_current_count(&self,_id:usize){
-        //1. 你预计怎么修改 TCB 内部的数据？你是否准备使用框架里常见的独占访问（例如 inner_exclusive_access() 获得 &mut TaskManagerInner），或内部可变性（UnsafeCell/RefCell）？
-
-        //2. 如果还是 &self，你打算怎样绕过编译器的可变性检查？（这一步如果没想好，编译阶段就会卡住。）
         //get the current task number
-        
-        //go to the current task's TCB and add syscall counts
-
+        let mut inner = self.inner.exclusive_access();
+        let current = inner.current_task;
+        inner.tasks[current].task_syscall_count[_id]+=1;
+        drop(inner);
     }
 
     fn read_current_count(&self,_id:usize) -> usize{
-        _id
+        let inner = self.inner.exclusive_access();
+        let current = inner.current_task;
+        inner.tasks[current].task_syscall_count[_id]
     }
 }
 
