@@ -1,6 +1,6 @@
 //! Process management syscalls
-use crate::task::{change_program_brk, exit_current_and_run_next, suspend_current_and_run_next};
-
+use crate::task::{change_program_brk, exit_current_and_run_next, suspend_current_and_run_next,current_user_token};
+use crate::mm::translated_timeval;
 #[repr(C)]
 #[derive(Debug)]
 pub struct TimeVal {
@@ -25,9 +25,18 @@ pub fn sys_yield() -> isize {
 /// YOUR JOB: get time with second and microsecond
 /// HINT: You might reimplement it with virtual memory management.
 /// HINT: What if [`TimeVal`] is splitted by two pages ?
-pub fn sys_get_time(_ts: *mut TimeVal, _tz: usize) -> isize {
+pub fn sys_get_time(ts: *mut TimeVal, _tz: usize) -> isize {
     trace!("kernel: sys_get_time");
-    -1
+    let us = get_time_us();
+    // 1. 拿到当前用户地址空间token （这里参照sys_write的写法）
+    // 2. 需要一个把*mut TimeVal转换成内核态可以用的&mut Timeval的工具函数
+    // current_user_token 当前用户页表物理地址
+    // PageTable::from_token(...)
+    *translated_timeval(current_user_token(), ts) = TimeVal {
+        sec: us/1_000_000,
+        usec:  us%1_000_000,
+    };
+    0
 }
 
 /// TODO: Finish sys_trace to pass testcases
@@ -36,7 +45,6 @@ pub fn sys_trace(_trace_request: usize, _id: usize, _data: usize) -> isize {
     trace!("kernel: sys_trace");
     -1
 }
-
 // YOUR JOB: Implement mmap.
 pub fn sys_mmap(_start: usize, _len: usize, _port: usize) -> isize {
     trace!("kernel: sys_mmap NOT IMPLEMENTED YET!");

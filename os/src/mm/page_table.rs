@@ -4,6 +4,7 @@ use super::{frame_alloc, FrameTracker, PhysPageNum, StepByOne, VirtAddr, VirtPag
 use alloc::vec;
 use alloc::vec::Vec;
 use bitflags::*;
+use crate::syscall::TimeVal;
 
 bitflags! {
     /// page table entry flags
@@ -178,4 +179,10 @@ pub fn translated_byte_buffer(token: usize, ptr: *const u8, len: usize) -> Vec<&
         start = end_va.into();
     }
     v
+}
+
+//get a modifiable timeval space
+pub fn translated_timeval(token: usize, ptr: *mut TimeVal) -> &mut TimeVal {
+    let page_table = PageTable::from_token(token);
+    let 
 }
