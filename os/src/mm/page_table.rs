@@ -181,8 +181,18 @@ pub fn translated_byte_buffer(token: usize, ptr: *const u8, len: usize) -> Vec<&
     v
 }
 
-//get a modifiable timeval space
-pub fn translated_timeval(token: usize, ptr: *mut TimeVal) -> &mut TimeVal {
+/// get a modifiable timeval space
+pub fn translated_timeval(token: usize, ptr: *mut TimeVal) -> *mut TimeVal {
+    //create a page table
     let page_table = PageTable::from_token(token);
-    let 
+    //参考了 translated byte buffer
+    let start = ptr as usize;
+    let start_va = VirtAddr::from(start);
+    let vpn = start_va.floor();
+    let ppn = page_table
+        .translate(vpn)
+        .unwrap()
+        .ppn();
+    //这里需要转变思路，通过获得真实的物理地址，然后转变成*mut TimeVal
+    (ppn.0 + start_va.page_offset()) as *mut TimeVal
 }

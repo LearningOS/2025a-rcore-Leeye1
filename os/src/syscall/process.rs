@@ -1,10 +1,14 @@
 //! Process management syscalls
 use crate::task::{change_program_brk, exit_current_and_run_next, suspend_current_and_run_next,current_user_token};
 use crate::mm::translated_timeval;
+use crate::timer::get_time_us;
 #[repr(C)]
 #[derive(Debug)]
+/// TimeVal Data Structure
 pub struct TimeVal {
+    /// second
     pub sec: usize,
+    /// milisecond
     pub usec: usize,
 }
 
@@ -32,10 +36,12 @@ pub fn sys_get_time(ts: *mut TimeVal, _tz: usize) -> isize {
     // 2. 需要一个把*mut TimeVal转换成内核态可以用的&mut Timeval的工具函数
     // current_user_token 当前用户页表物理地址
     // PageTable::from_token(...)
-    *translated_timeval(current_user_token(), ts) = TimeVal {
-        sec: us/1_000_000,
+    unsafe{
+        *translated_timeval(current_user_token(), ts) = TimeVal {
+        sec:   us/1_000_000,
         usec:  us%1_000_000,
-    };
+        };
+    }
     0
 }
 
